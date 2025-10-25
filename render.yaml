@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: topping-bmc
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: ACCESS_KEY
+        value: barzin2025
+      - key: PORT
+        value: 3000
