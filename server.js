@@ -9,6 +9,12 @@ const PORT = process.env.PORT || 3000;
 const ACCESS_KEY = process.env.ACCESS_KEY || 'barzin2025';
 const DB_FILE = path.join(__dirname, 'database.sqlite');
 
+// Log environment variables for debugging
+console.log('Environment check:');
+console.log('PORT:', PORT);
+console.log('ACCESS_KEY:', ACCESS_KEY ? 'Set' : 'Not set');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -17,13 +23,16 @@ app.use(express.static(__dirname));
 // Initialize SQLite database
 function initializeDatabase() {
     return new Promise((resolve, reject) => {
+        console.log('Initializing database at:', DB_FILE);
+        
         const db = new sqlite3.Database(DB_FILE, (err) => {
             if (err) {
                 console.error('Error opening database:', err);
+                console.error('Database file path:', DB_FILE);
                 reject(err);
                 return;
             }
-            console.log('Connected to SQLite database');
+            console.log('Connected to SQLite database successfully');
         });
 
         // Create canvas table if it doesn't exist
