@@ -99,19 +99,7 @@ function initializeDatabase() {
     });
 }
 
-// Authentication middleware
-function authenticate(req, res, next) {
-    const authKey = req.headers['x-access-key'] || req.body.accessKey;
-    
-    if (authKey === ACCESS_KEY) {
-        next();
-    } else {
-        res.status(401).json({ 
-            success: false, 
-            message: 'دسترسی غیرمجاز - رمز عبور اشتباه است' 
-        });
-    }
-}
+// No authentication required - public access
 
 // Routes
 
@@ -120,26 +108,8 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Login endpoint
-app.post('/api/login', (req, res) => {
-    const { accessKey } = req.body;
-    
-    if (accessKey === ACCESS_KEY) {
-        res.json({ 
-            success: true, 
-            message: 'ورود موفقیت‌آمیز',
-            accessKey: ACCESS_KEY 
-        });
-    } else {
-        res.status(401).json({ 
-            success: false, 
-            message: 'رمز عبور اشتباه است' 
-        });
-    }
-});
-
 // Save data endpoint
-app.post('/api/save', authenticate, (req, res) => {
+app.post('/api/save', (req, res) => {
     const db = new sqlite3.Database(DB_FILE);
     const data = req.body;
     
@@ -191,7 +161,7 @@ app.post('/api/save', authenticate, (req, res) => {
 });
 
 // Load data endpoint
-app.get('/api/load', authenticate, (req, res) => {
+app.get('/api/load', (req, res) => {
     const db = new sqlite3.Database(DB_FILE);
     
     const selectQuery = 'SELECT * FROM canvas WHERE id = 1';

@@ -872,33 +872,6 @@
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div class="login-container" id="loginContainer">
-        <div class="login-card">
-            <div class="login-icon">🔒</div>
-            <h1 class="login-title">ورود به سیستم</h1>
-            <p class="login-subtitle">بوم مدل کسب‌وکار تاپینگ کوریر</p>
-            
-            <form class="login-form" id="loginForm">
-                <div class="form-group">
-                    <label for="accessKey" class="form-label">رمز عبور:</label>
-                    <input 
-                        type="password" 
-                        id="accessKey" 
-                        class="form-input" 
-                        placeholder="رمز عبور را وارد کنید"
-                        required
-                    >
-                    <div class="login-error" id="loginError">رمز عبور اشتباه است</div>
-                </div>
-                
-                <button type="submit" class="login-btn" id="loginBtn">
-                    ورود
-                </button>
-            </form>
-        </div>
-    </div>
-
     <!-- Main Application -->
     <div class="main-app" id="mainApp">
         <div class="container">
@@ -922,10 +895,6 @@
                         <button class="btn" onclick="printCanvas()">
                             <span>🖨️</span>
                             چاپ
-                        </button>
-                        <button class="btn logout-btn" onclick="logout()">
-                            <span>🚪</span>
-                            خروج
                         </button>
                     </div>
                 </div>
@@ -1096,7 +1065,6 @@
                 this.data = {};
                 this.currentStep = 0;
                 this.totalSteps = 9;
-                this.accessKey = null;
                 this.sections = [
                     'customerSegments', 'valuePropositions', 'channels', 'customerRelationships', 'revenueStreams',
                     'keyResources', 'keyActivities', 'keyPartners', 'costStructure'
@@ -1117,83 +1085,17 @@
             }
 
             init() {
-                this.checkAuth();
+                this.showMainApp();
                 this.attachEventListeners();
             }
 
-            checkAuth() {
-                // Check if user is already authenticated
-                const savedKey = localStorage.getItem('accessKey');
-                if (savedKey) {
-                    this.accessKey = savedKey;
-                    this.showMainApp();
-                    this.loadData();
-                } else {
-                    this.showLoginScreen();
-                }
-            }
-
-            showLoginScreen() {
-                document.getElementById('loginContainer').style.display = 'flex';
-                document.getElementById('mainApp').classList.remove('show');
-            }
-
             showMainApp() {
-                document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('mainApp').classList.add('show');
                 this.initializePagination();
                 this.startAutoSave();
+                this.loadData();
             }
 
-            async login(accessKey) {
-                try {
-                    this.showLoading();
-                    
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ accessKey })
-                    });
-
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        this.accessKey = accessKey;
-                        localStorage.setItem('accessKey', accessKey);
-                        this.showMainApp();
-                        this.loadData();
-                        this.showToast('ورود موفقیت‌آمیز', 'success');
-                    } else {
-                        this.showLoginError(result.message);
-                    }
-                } catch (error) {
-                    console.error('Login error:', error);
-                    this.showLoginError('خطا در اتصال به سرور');
-                } finally {
-                    this.hideLoading();
-                }
-            }
-
-            logout() {
-                if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
-                    this.accessKey = null;
-                    localStorage.removeItem('accessKey');
-                    this.showLoginScreen();
-                    this.showToast('با موفقیت خارج شدید', 'success');
-                }
-            }
-
-            showLoginError(message) {
-                const errorEl = document.getElementById('loginError');
-                errorEl.textContent = message;
-                errorEl.classList.add('show');
-                
-                setTimeout(() => {
-                    errorEl.classList.remove('show');
-                }, 3000);
-            }
 
             initializePagination() {
                 this.updateSectionVisibility();
@@ -1350,13 +1252,6 @@
             }
 
             attachEventListeners() {
-                // Login form
-                document.getElementById('loginForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const accessKey = document.getElementById('accessKey').value;
-                    this.login(accessKey);
-                });
-
                 // Textarea input events
                 document.querySelectorAll('.section-textarea').forEach(textarea => {
                     const section = textarea.dataset.section;
@@ -1425,8 +1320,6 @@
             }
 
             async saveData() {
-                if (!this.accessKey) return;
-
                 try {
                     const companyInput = document.getElementById('companyName');
                     const saveData = {
@@ -1451,8 +1344,7 @@
                     const response = await fetch('/api/save', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'x-access-key': this.accessKey
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(saveData)
                     });
@@ -1473,15 +1365,9 @@
             }
 
             async loadData() {
-                if (!this.accessKey) return;
-
                 try {
                     // Try to load from server first
-                    const response = await fetch('/api/load', {
-                        headers: {
-                            'x-access-key': this.accessKey
-                        }
-                    });
+                    const response = await fetch('/api/load');
 
                     const result = await response.json();
                     
@@ -1730,9 +1616,6 @@
             app.previousSection();
         }
 
-        function logout() {
-            app.logout();
-        }
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
